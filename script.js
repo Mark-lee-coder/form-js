@@ -1,18 +1,17 @@
-const fs = require("fs");
-const createCsvWriter = require("csv-writer").createObjectCsvWriter;
-
 function submitForm() {
   var fname = document.getElementById("fname");
   var sname = document.getElementById("sname");
   var email = document.getElementById("email");
   var phone = document.getElementById("phone");
   var company = document.getElementById("company");
+  var application = document.getElementById("application");
 
   var fnameError = document.getElementById("fname-error");
   var snameError = document.getElementById("sname-error");
   var emailError = document.getElementById("email-error");
   var phoneError = document.getElementById("phone-error");
   var companyError = document.getElementById("company-error");
+  var applicationError = document.getElementById("application-error");
 
   var errorMessage = document.getElementById("error-message");
   var thankYouMessage = document.getElementById("thank-you");
@@ -23,6 +22,7 @@ function submitForm() {
   emailError.textContent = "";
   phoneError.textContent = "";
   companyError.textContent = "";
+  applicationError.textContent = "";
 
   // Check if all fields are filled correctly
   if (
@@ -30,7 +30,8 @@ function submitForm() {
     sname.checkValidity() &&
     email.checkValidity() &&
     phone.checkValidity() &&
-    company.checkValidity()
+    company.checkValidity() &&
+    application.checkValidity()
   ) {
     // Hide the error message
     errorMessage.style.display = "none";
@@ -42,7 +43,14 @@ function submitForm() {
     // Example: document.getElementById('myForm').submit();
     // Alert message
     alert("Thank you for submitting the form!");
-    submitData(fname, sname, email, phone, company);
+    submitData(
+      fname.value,
+      sname.value,
+      email.value,
+      phone.value,
+      company.value,
+      application.value
+    );
     clearForm();
   } else {
     // Display the error message
@@ -69,6 +77,10 @@ function submitForm() {
       companyError.textContent = "Please enter a valid company name.";
     }
 
+    if (!application.checkValidity()) {
+      applicationError.textContent = "Please enter a valid application name.";
+    }
+
     // Hide the thank you message
     thankYouMessage.style.display = "none";
   }
@@ -92,37 +104,28 @@ function clearForm() {
   document.getElementById("myForm").reset();
 }
 
-function submitData(fname, lname, email, phoneNum, company) {
-  // Define the CSV writer
-  const csvWriter = createCsvWriter({
-    path: "C:\\Users\\leonw\\OneDrive\\Desktop\\Data.csv",
-    header: [
-      { id: "fname", title: "First Name" },
-      { id: "lname", title: "Last Name" },
-      { id: "email ", title: "email" },
-      { id: "phoneNum ", title: "Phone Number" },
-      { id: "company ", title: "Company" },
-    ],
-    append: true, // Set this to true to append data to an existing file
-  });
-
-  let dataToAppend = {
-    fname: fname,
-    lname: lname,
-    email: email,
-    phoneNum: phoneNum,
-    company: company,
+function submitData(fname, lname, email, phoneNum, company, application) {
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fname: fname,
+      lname: lname,
+      phoneNum: phoneNum,
+      email: email,
+      company: company,
+      application: application,
+    }),
   };
 
-  // Append the data to the CSV file
-  csvWriter
-    .writeRecords(dataToAppend)
-    .then(() => {
-      console.log("Data appended to CSV file successfully");
+  fetch("http://localhost:3000/write-to-csv", requestOptions)
+    .then((response) => response.json()) // Parse the response as JSON
+    .then((data) => {
+      console.log(data); // Handle the response data
     })
-    .catch((err) => {
-      console.error("Error appending data to CSV file:", err);
+    .catch((error) => {
+      console.error("Error:", error);
     });
 }
-
-var encodedUri = encodeURI(csv);
